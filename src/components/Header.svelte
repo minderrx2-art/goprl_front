@@ -9,6 +9,6 @@
         <span class="text-4xl font-bold tracking-tight">+</span>
         <img src={svelteLogo} alt="Svelte Logo" class="h-12 w-auto" />
     </div>
-    <h1 class="text-4xl font-bold tracking-tight">Free URL Shortener</h1>
+    <h1 class="text-4xl font-bold tracking-tight">URL Shortener</h1>
     <p class="text-muted-foreground mt-2">Made with GO and Svelte 5</p>
 </header>
