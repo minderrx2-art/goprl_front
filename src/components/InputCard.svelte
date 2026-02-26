@@ -11,17 +11,31 @@
     import { Spinner } from "@/components/ui/spinner";
     import { X } from "@lucide/svelte";
     import { shortenUrl, type ShortenResponse } from "@/lib/shortener";
+    import { fly, slide } from "svelte/transition";
+
+    interface ResultEntry {
+        response: ShortenResponse;
+        originalUrl: string;
+    }
 
     let url = $state("");
-    let result = $state<ShortenResponse | null>(null);
+    let results = $state<ResultEntry[]>([]);
     let loading = $state(false);
 
     async function handleSubmit(e: SubmitEvent) {
         e.preventDefault();
-        result = null;
         loading = true;
-        result = await shortenUrl(url);
+        const currentUrl = url;
+        const res = await shortenUrl(currentUrl);
+        if (res) {
+            results = [{ response: res, originalUrl: currentUrl }, ...results];
+        }
         loading = false;
+        url = "";
+    }
+
+    function removeResult(index: number) {
+        results = results.filter((_, i) => i !== index);
     }
 </script>
 
@@ -60,44 +74,56 @@
         </CardFooter>
     </Card>
 
-    <div
-        class="result-container transition-all duration-500 ease-in-out"
-        class:opacity-100={result}
-        class:opacity-0={!result}
-        class:pointer-events-none={!result}
-    >
-        <div
-            class="p-6 border rounded-xl bg-card text-card-foreground shadow-sm min-h-[110px] flex flex-col justify-center relative"
-        >
-            {#if result}
-                <button
-                    class="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
-                    onclick={() => (result = null)}
+    <div class="space-y-4">
+        {#each results as res, i (res)}
+            <div class="result-container" transition:slide>
+                <div
+                    in:fly={{ y: -20, duration: 300 }}
+                    out:fly={{ y: -20, duration: 200 }}
                 >
-                    <X size={18} />
-                </button>
-                {#if result.short_url}
-                    <div
-                        class="space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-500"
-                    >
-                        <p class="text-sm font-medium">Your shortened URL:</p>
-                        <div class="flex items-center gap-2">
-                            <a
-                                href={result.short_url}
-                                target="_blank"
-                                class="text-primary font-semibold hover:underline break-all"
-                                >{result.short_url}</a
-                            >
-                        </div>
-                    </div>
-                {:else if result.error}
-                    <p
-                        class="text-destructive font-medium animate-in fade-in duration-500"
-                    >
-                        {result.error}
-                    </p>
-                {/if}
-            {/if}
-        </div>
+                    {@render urlCard(res, i)}
+                </div>
+            </div>
+        {/each}
     </div>
 </div>
+
+{#snippet urlCard(entry: ResultEntry, index: number)}
+    <Card class="relative">
+        <button
+            class="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+            onclick={() => removeResult(index)}
+        >
+            <X size={18} />
+        </button>
+        <CardContent>
+            {#if entry.response.short_url}
+                <div class="space-y-2">
+                    <p class="text-sm font-medium">Your shortened URL:</p>
+                    <div class="flex items-center gap-2">
+                        <a
+                            href={entry.response.short_url}
+                            target="_blank"
+                            class="text-primary font-semibold hover:underline break-all"
+                            >{entry.response.short_url}</a
+                        >
+                    </div>
+                </div>
+            {:else if entry.response.error}
+                <p class="text-destructive font-medium">
+                    {entry.response.error}
+                </p>
+            {/if}
+        </CardContent>
+        <CardFooter>
+            <p class="text-sm text-muted-foreground">
+                Original: <a
+                    href={entry.originalUrl}
+                    target="_blank"
+                    class="text-primary font-semibold hover:underline break-all"
+                    >{entry.originalUrl}</a
+                >
+            </p>
+        </CardFooter>
+    </Card>
+{/snippet}
