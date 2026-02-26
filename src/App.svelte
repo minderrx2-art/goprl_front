@@ -1,10 +1,10 @@
 <script lang="ts">
 	import "./app.css";
-	import InteractiveBackground from "@/components/InteractiveBackground.svelte";
+	import Background from "@/components/Background.svelte";
 	import Main from "@/components/Main.svelte";
 </script>
 
-<InteractiveBackground />
+<Background />
 <Main />
 
 <style>
