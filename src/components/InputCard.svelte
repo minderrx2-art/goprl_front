@@ -22,6 +22,8 @@
     let results = $state<ResultEntry[]>([]);
     let loading = $state(false);
 
+    const { setDisplay }: { setDisplay: (display: boolean) => void } = $props();
+
     async function handleSubmit(e: SubmitEvent) {
         e.preventDefault();
         loading = true;
@@ -117,11 +119,16 @@
         </CardContent>
         <CardFooter>
             <p class="text-sm text-muted-foreground">
-                Original: <a
-                    href={entry.originalUrl}
-                    target="_blank"
+                <button
+                    onclick={() => {
+                        navigator.clipboard.writeText(
+                            entry.response.short_url || "",
+                        );
+                        setDisplay(true);
+                        setTimeout(() => setDisplay(false), 2000);
+                    }}
                     class="text-primary font-semibold hover:underline break-all"
-                    >{entry.originalUrl}</a
+                    >Copy to clipboard</button
                 >
             </p>
         </CardFooter>
